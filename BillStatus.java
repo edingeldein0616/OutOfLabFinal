@@ -1,0 +1,1 @@
+public enum BillStatus {Drafted, InCommittee, OnTheFloor, Pending, Approved, Rejected}
