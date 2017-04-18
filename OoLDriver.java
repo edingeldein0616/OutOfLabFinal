@@ -167,10 +167,17 @@ public class OoLDriver
         //***********************************MAIN LOOP********************************************************************
         //****************************************************************************************************************
         //****************************************************************************************************************
-        final int YEAR = 1; //365;
+        final int YEAR = 365; //365;
 
         for (int day = 0; day < YEAR; day++)
         {
+            System.out.println("\t\t\t\tDAY " + day);
+            for(int row = 0; row < 5; row++) { 
+                for(int col = 0; col < 100; col++) {
+                    System.out.print("*");
+                }
+                System.out.println();
+            }            
             //Who wants to author bills
             //Also sends those bills to head of their units
             for (Legislator l : senate)
@@ -222,9 +229,9 @@ public class OoLDriver
                                 if (l.vote(b))
                                     yes++;
                                 votes++;
-                                System.out.println("House committe votes: " + votes);
                             }
                         }
+                        System.out.println(printResults(b, 'H', votes, yes));
                     }
                     else // Bill in Senate
                     {
@@ -239,7 +246,7 @@ public class OoLDriver
                                 votes++;
                             }           
                         }
-                        System.out.println("Senate committe 1 votes: " + yes);
+                        System.out.println(printResults(b, 'S', votes, yes));
                     }
                 }
                 else //Author in House
@@ -256,6 +263,7 @@ public class OoLDriver
                                 votes++;
                             }                    
                         }
+                        System.out.println(printResults(b, 'S', votes, yes));
                     }
                     else // Bill in House
                     {
@@ -268,7 +276,7 @@ public class OoLDriver
                                 votes++;
                             }                                 
                         }
-                        System.out.println("House committe 1 votes: " + yes);
+                        System.out.println(printResults(b, 'H', votes, yes));
                     }
                 }
                     
@@ -295,6 +303,14 @@ public class OoLDriver
                 //Floor Votes
                 temp = new ArrayList<Bill>();
                 temp = ((Leader) senate.get(countS)).callForVote();
+                
+                    //printing floor vote header
+                for(int row = 0; row < 50; row++) { 
+                    System.out.print("*");
+                }
+                System.out.print("SENATE FLOOR VOTES\n");
+
+                    //senate floor vote loop
                 for (int x =0; x <temp.size();x++)
                 {
                     int votes = 0;
@@ -317,10 +333,20 @@ public class OoLDriver
                     }
                     else
                         trash.add(temp.get(x));
+                    System.out.println("Vote " + x);
+                    System.out.println(printResults(temp.get(x), 'S', votes, yes));
                 }
                
                 temp = new ArrayList<Bill>();
                 temp = ((Leader) house.get(countH)).callForVote();
+
+                    //printing floor vote header
+                for(int row = 0; row < 50; row++) { 
+                    System.out.print("*");
+                }
+                System.out.print("HOUSE FLOOR VOTES\n");
+
+                    //house floor vote loop
                 for (int x =0; x <temp.size();x++)
                 {
                     int votes = 0;
@@ -343,6 +369,9 @@ public class OoLDriver
                     }
                     else
                         trash.add(temp.get(x));
+
+                    System.out.println("Vote " + x);
+                    System.out.println(printResults(temp.get(x), 'H', votes, yes));
                 }
                
                 //President
@@ -402,5 +431,13 @@ public class OoLDriver
         	System.out.println("Law Book size: " + lawBook.size());
 
         	
+    }
+
+    public static String printResults(Bill b, char chamber, int votes, int yes) {
+        if(chamber == 'H') {
+            return "House Committe Vote results...\n" + b + "\nNum Votes: " + votes + "\nNum Yes: " + yes + "\n\n";
+        } else {
+            return "Senate Committe Vote results...\n" + b + "\nNum Votes: " + votes + "\nNum Yes: " + yes + "\n\n";
+        }
     }
 }

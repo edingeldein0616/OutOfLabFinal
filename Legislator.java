@@ -23,38 +23,63 @@ public class Legislator
           setName(l.getName());
      }
 
+     /**
+     * Voting method for the Legislator Class.
+     * @param b The input bill that the legislator is to vote on.
+     * @return boolean Returns true if the legislator decides to vote yes, returns false if voting no.
+     */
      public boolean vote(Bill b)
      {
-          int index = 0;
-          double factor = 3.0;
-          if (b.getAuthor(index).getParty() == getParty()) {
-               factor = recursion(factor, index++, b);
-               System.out.println(factor);
+          //Set important variables
+          int index = b.getAuthorsArray().size();
+          ArrayList<Legislator> authors = b.getAuthorsArray();
+          int sameParty = 0, diffParty = 0;
+          double samePartyOdds = 0.0, diffPartyOdds = 0.0;
+          
+          //Count same and different party authors
+          for(Legislator leg : authors) {
+               if(leg.getParty() == getParty()) {
+                    sameParty++;
+               } else {
+                    diffParty++;
+               }
           }
+          
+          //Calculate sameParty odds
+          samePartyOdds = recursion(sameParty, true); //To calculate same party odds, enter second parameter as true
+          diffPartyOdds = recursion(diffParty, false);
+          
+          //Decide what voting outcome is
+          double factor = ((samePartyOdds * sameParty) + (diffPartyOdds * diffParty)) / ((double)(sameParty + diffParty)); //From OOL3 pdf.
+          factor *= 10;
+          //System.out.println(getName() + ", " + getParty() + ": " + factor);
           if (rand.nextInt(10) < factor)
                return true;
           return false;
-          //return true;
      }
 
-     public double recursion(double factor, int index, Bill b) {
-          if(index < b.getAuthorsArray().size() - 1) {
-               if(b.getAuthor(index).getParty() == getParty()) {
-                    factor += (10.0 - 6.0) * 6.0;
-                    index++;
-                    factor = recursion(factor, index, b);
-               } else {
-                    factor -= Math.pow(1.0, index + 1);
-                    index++;
-                    factor = recursion(factor, index, b);
+     /**
+     * The recursion method that calculates the voting odds for the individual legislator based on the party compositon
+     * of the bill that they are voting on.
+     * @param n The number of bill authors that are either the same or different party as the voting legislator
+     * @param same Decides whether the method is calculating same voting odds or different voting odds.
+     * (meaning same legislator or different legislator voting odds)
+     * @return double Returns a double that will be added to the factor that represents the voting odds of the legislator.
+     */
+     public double recursion(int n, boolean same) {
+          double factor = 0.0;
+          if(same) {
+               if(n == 0)
+                    return 0.0;
+               if(n > 0) {
+                    factor = 0.6 + (1.0 - (recursion(n - 1, true)) * 0.6);
+                    return factor;
                }
           } else {
-               if(b.getAuthor(index).getParty() == getParty()) {
-                    factor += (10.0 - 6.0) * 6.0;
-                    return factor;
-               } else {
-                    factor -= Math.pow(1.0, index + 1);
-                    return factor;
+               if(n == 0) {
+                    return 0.0;
+               } if(n > 0) {
+                    factor = 0.1 - Math.pow(0.1, n) - recursion(n-1, false);
                }
           }
           return factor;
@@ -110,15 +135,15 @@ public class Legislator
                ArrayList<Legislator> authors = new ArrayList<Legislator>();
                authors.add(this);
 
-               //adds 2 more randomly picked authors to bill (must be in same committee)
-               for(int i = 1; i <= 3; i++) {
+               //adds random number (2 - 6) of randomly picked authors to bill (must be in same committee)
+               int numAuthors = rand.nextInt(4) + 2;
+               for(int i = 1; i <= numAuthors; i++) {
                     boolean picked = false;                    
                     while(!picked){     
                          int index = rand.nextInt(chamber.size());
                          Legislator temp = chamber.get(index);
-                         
                          if(temp.getCommittee() == getCommittee()) {
-                              authors.add(temp); //May be the same 2-3 legislators as authors
+                              authors.add(temp); //Same legislator may be multiple authors
                               picked = true;
                          }
                     }
