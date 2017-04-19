@@ -10,6 +10,9 @@ public class Bill
      private ArrayList<Legislator> authors = null;
      private static int billCount = 0;
      private boolean c1 = false; //Passed first Committee
+     public int creationDate;
+     public int trashDate;
+     public int signDate;
      
      public boolean isHalfway()
      {

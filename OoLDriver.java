@@ -185,7 +185,7 @@ public class OoLDriver
                 Bill b = l.draftBill(senate);
                 if (b != null)
                 {
-                    
+                    b.creationDate = day;
                     int count = -1;
                     while(!(senate.get(++count) instanceof Leader));
                     ((Leader) senate.get(count)).newBill(b);
@@ -296,8 +296,10 @@ public class OoLDriver
                     }
                     //System.err.println("Pass");
                     }
-                    else
+                    else{
+                        b.trashDate = day;
                         trash.add(b);
+                    }
                 }
                
                 //Floor Votes
@@ -331,8 +333,10 @@ public class OoLDriver
                             pres.getBill(temp.get(x));
                         }
                     }
-                    else
+                    else{
+                        temp.get(x).trashDate = day;
                         trash.add(temp.get(x));
+                    }
                     System.out.println("Vote " + x);
                     System.out.println(printResults(temp.get(x), 'S', votes, yes));
                 }
@@ -367,8 +371,10 @@ public class OoLDriver
                             pres.getBill(temp.get(x));
                         }
                     }
-                    else
+                    else {
+                        temp.get(x).trashDate = day;
                         trash.add(temp.get(x));
+                    }
 
                     System.out.println("Vote " + x);
                     System.out.println(printResults(temp.get(x), 'H', votes, yes));
@@ -387,8 +393,10 @@ public class OoLDriver
                             ((Leader) senate.get(countS)).getRejected(b);
                         }
                     }
-                    else
+                    else {
+                        b.signDate = day;
                         lawBook.add(b);
+                    }
                 }
                
                 //Overrides
@@ -420,10 +428,13 @@ public class OoLDriver
                     
                     if (houseOverride && senateOverride)
                     {
+                        b.signDate = day;
                         lawBook.add(b);
                     }
-                    else
+                    else {
+                        b.trashDate = day;
                         trash.add(b);
+                    }
                 }
         	}
 

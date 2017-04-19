@@ -51,6 +51,7 @@ public class Legislator
           
           //Decide what voting outcome is
           double factor = ((samePartyOdds * sameParty) + (diffPartyOdds * diffParty)) / ((double)(sameParty + diffParty)); //From OOL3 pdf.
+         // factor = factor - (factor * .5);
           factor *= 10;
           //System.out.println(getName() + ", " + getParty() + ": " + factor);
           if (rand.nextInt(10) < factor)
