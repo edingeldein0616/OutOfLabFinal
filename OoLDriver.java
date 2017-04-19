@@ -34,6 +34,16 @@ public class OoLDriver
 		final int LEGS = 535;
 		Random rand = new Random();
 
+		double aRating = 0.0;
+		double avgRating = 0.0;
+		double maxRating = 0.0;
+		double minRating = 0.0;
+		int highCount = 0;
+		int lowCount = 0;
+		
+		int totalPassedBills = 0;
+		int totalBills = 0;
+		
 		//Testing Data Structures...Only needed for testing!
 		ArrayList <String> names = new ArrayList<String>();
 		ArrayList <String> states = new ArrayList<String>();
@@ -171,13 +181,8 @@ public class OoLDriver
 
         for (int day = 0; day < YEAR; day++)
         {
-            System.out.println("\t\t\t\tDAY " + day);
-            for(int row = 0; row < 5; row++) { 
-                for(int col = 0; col < 100; col++) {
-                    System.out.print("*");
-                }
-                System.out.println();
-            }            
+        	int passedCount = 0;
+        	int voteCount = 0;
             //Who wants to author bills
             //Also sends those bills to head of their units
             for (Legislator l : senate)
@@ -216,6 +221,7 @@ public class OoLDriver
                 int votes = 0;
                 int yes = 0;
                 boolean isHouse = true;
+                
                 if (senate.indexOf(b.getAuthor(0)) != -1) //Author In Senate
                 {
                     
@@ -227,11 +233,14 @@ public class OoLDriver
                             if (l.getCommittee() == b.getType())
                             {
                                 if (l.vote(b))
+                                {
                                     yes++;
+                                    passedCount++;
+                                }
                                 votes++;
+                                System.out.println("House committe votes: " + votes);
                             }
                         }
-                        System.out.println(printResults(b, 'H', votes, yes));
                     }
                     else // Bill in Senate
                     {
@@ -242,11 +251,14 @@ public class OoLDriver
                             if (l.getCommittee() == b.getType())
                             {
                                 if (l.vote(b))
+                                {
                                     yes++;
+                                    passedCount++;
+                                }
                                 votes++;
                             }           
                         }
-                        System.out.println(printResults(b, 'S', votes, yes));
+                        System.out.println("Senate committe 1 votes: " + yes);
                     }
                 }
                 else //Author in House
@@ -259,11 +271,13 @@ public class OoLDriver
                             if (l.getCommittee() == b.getType())
                             {
                                 if (l.vote(b))
+                                {
                                     yes++;
+                                    passedCount++;
+                                }
                                 votes++;
                             }                    
                         }
-                        System.out.println(printResults(b, 'S', votes, yes));
                     }
                     else // Bill in House
                     {
@@ -272,17 +286,21 @@ public class OoLDriver
                             if (l.getCommittee() == b.getType())
                             {
                                 if (l.vote(b))
+                                {
                                     yes++;
+                                    passedCount++;
+                                }
                                 votes++;
                             }                                 
                         }
-                        System.out.println(printResults(b, 'H', votes, yes));
+                        System.out.println("House committe 1 votes: " + yes);
                     }
                 }
                     
                 //Tally votes
                 //System.err.println("Votes:\t" + votes);
                 //System.err.println("Yes:\t" + yes);
+                voteCount += votes;
                 if ( (votes / 2) < yes) //Passes
                 {
                     b.setStatus(BillStatus.OnTheFloor);
@@ -295,6 +313,7 @@ public class OoLDriver
                         ((Leader) senate.get(countS)).passedCommittee(b);
                     }
                     //System.err.println("Pass");
+                    passedCount++;
                     }
                     else
                         trash.add(b);
@@ -303,14 +322,6 @@ public class OoLDriver
                 //Floor Votes
                 temp = new ArrayList<Bill>();
                 temp = ((Leader) senate.get(countS)).callForVote();
-                
-                    //printing floor vote header
-                for(int row = 0; row < 50; row++) { 
-                    System.out.print("*");
-                }
-                System.out.print("SENATE FLOOR VOTES\n");
-
-                    //senate floor vote loop
                 for (int x =0; x <temp.size();x++)
                 {
                     int votes = 0;
@@ -321,6 +332,7 @@ public class OoLDriver
                             yes++;
                         votes++;
                     }
+                    voteCount += votes;
                     if ( (votes/2 < yes))
                     {
                         if (senate.indexOf(temp.get(x).getAuthor(0)) != -1)
@@ -329,24 +341,15 @@ public class OoLDriver
                         {
                             temp.get(x).setStatus(BillStatus.Pending);
                             pres.getBill(temp.get(x));
+                            passedCount++;
                         }
                     }
                     else
                         trash.add(temp.get(x));
-                    System.out.println("Vote " + x);
-                    System.out.println(printResults(temp.get(x), 'S', votes, yes));
                 }
                
                 temp = new ArrayList<Bill>();
                 temp = ((Leader) house.get(countH)).callForVote();
-
-                    //printing floor vote header
-                for(int row = 0; row < 50; row++) { 
-                    System.out.print("*");
-                }
-                System.out.print("HOUSE FLOOR VOTES\n");
-
-                    //house floor vote loop
                 for (int x =0; x <temp.size();x++)
                 {
                     int votes = 0;
@@ -357,6 +360,7 @@ public class OoLDriver
                             yes++;
                         votes++;
                     }
+                    voteCount += votes;
                     if ( (votes/2 < yes))
                     {
                         if (house.indexOf(temp.get(x).getAuthor(0)) != -1)
@@ -365,13 +369,11 @@ public class OoLDriver
                         {
                             temp.get(x).setStatus(BillStatus.Pending);
                             pres.getBill(temp.get(x));
+                            passedCount++;
                         }
                     }
                     else
                         trash.add(temp.get(x));
-
-                    System.out.println("Vote " + x);
-                    System.out.println(printResults(temp.get(x), 'H', votes, yes));
                 }
                
                 //President
@@ -388,7 +390,10 @@ public class OoLDriver
                         }
                     }
                     else
+                    {
                         lawBook.add(b);
+                        passedCount++;
+                    }
                 }
                
                 //Overrides
@@ -399,12 +404,17 @@ public class OoLDriver
                     int votes = 0;
                     int yes = 0;
                     boolean senateOverride = false;
+                    
                     for (Legislator l : senate)
                     {
                         if (l.vote(b))
+                        {
                             yes++;
+                            passedCount++;
+                        }
                         votes++;
                     }
+                    
                     if ( (votes * 2)/3 < yes)
                         senateOverride = true;
                     
@@ -412,9 +422,15 @@ public class OoLDriver
                     for (Legislator l : house)
                     {
                         if (l.vote(b))
+                        {
                             yes++;
+                            passedCount++;
+                        }
                         votes++;
                     }
+                    
+                    voteCount += votes;
+                    
                     if ( (votes * 2)/3 < yes)
                         houseOverride = true;
                     
@@ -425,19 +441,65 @@ public class OoLDriver
                     else
                         trash.add(b);
                 }
+                
+                double passRate = 0;
+                passRate = (double)passedCount/(double)voteCount;
+                
+                if((passRate >= 0.1) || (passRate <= 0.01))
+                {
+                	aRating -= 0.01;
+                	// Approval Rating -1%
+                }
+                else
+                {
+                	aRating += 0.01;
+                	// Approval Rating +1%
+                }
+                
+                if(passRate > 0.65)
+                {
+                	// Pres's party 50% less likely to vote for different party bills
+                	// Non-Pres's parties 50% more likely to vote for president's party's bills
+                }
+                else if(passRate < 0.45)
+                {
+                	// Pres's party 50% more likely to vote for different party bills
+                	// Non-Pres's parties 50% less likely to vote for president's party's bills
+                }
+                
+                totalPassedBills += lawBook.size();
+                totalBills += (lawBook.size() + trash.size());
+                
+                aRating = ((double)totalPassedBills / (double)totalBills);
+                
+                if(aRating > 0.65)
+                	highCount++;
+                else if(aRating < 0.45)
+                	lowCount++;
+                
+                if(aRating > maxRating)
+                	maxRating = aRating;
+                else if(aRating < minRating)
+                	minRating = aRating;
+                else if(minRating == 0)
+                	minRating = aRating;
+            	
+                
+                avgRating += aRating;
+                
         	}
-
+        	
+        	avgRating = avgRating / YEAR;
+        
+        	System.out.println("Average Approval Rating: " + (int)(avgRating*100) + "%");
+        	System.out.println("Max Approval Rating: " + (int)(maxRating*100) + "%");
+        	System.out.println("Min Approval Rating: " + (int)(minRating*100) + "%");
+        	System.out.println("# of Days > 65%: " + highCount);
+        	System.out.println("# of Days < 45%: " + lowCount);
+        	System.out.println("Approval Rating: " + (int)(aRating*100) + "%");
         	System.out.println("Trash size: " + trash.size());
         	System.out.println("Law Book size: " + lawBook.size());
 
         	
-    }
-
-    public static String printResults(Bill b, char chamber, int votes, int yes) {
-        if(chamber == 'H') {
-            return "House Committe Vote results...\n" + b + "\nNum Votes: " + votes + "\nNum Yes: " + yes + "\n\n";
-        } else {
-            return "Senate Committe Vote results...\n" + b + "\nNum Votes: " + votes + "\nNum Yes: " + yes + "\n\n";
-        }
     }
 }
