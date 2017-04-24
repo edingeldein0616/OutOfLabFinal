@@ -19,11 +19,42 @@ public class OoLDriver
         return word;
 
     }
+    public static void PrintOutputFileInfo(int signedBills) throws FileNotFoundException, IOException {
+        String input = "";
+        Scanner userInput = new Scanner(System.in);
+        System.out.println("Name of file without extension: ");
+        input = userInput.nextLine();
+        File output = new File(input + ".txt");
+        FileWriter outputFile = new FileWriter(output, true);
+        double co = ((double) committeeOneBills) / ((double) totalBillsCreated) * 100;
+        double ct = ((double) committeeTwoBills) / ((double) totalBillsCreated) * 100;
+        double fo = ((double) floorOneBills) / ((double) totalBillsCreated) * 100;
+        double ft = ((double) floorTwoBills) / ((double) totalBillsCreated) * 100;
+        double v = ((double) vetoedBills) / ((double) totalBillsCreated) * 100;
+        double o = ((double) overriddenBills) / ((double) totalBillsCreated) * 100;
+        double s = ((double) signedBills) / ((double) totalBillsCreated) * 100;
 
-    public static double aRating = 0.55;
+        outputFile.write("ARO " + beginingARating + "/ARE " + aRating + "/D " + totalBillsCreated + "/CO " + co + "/CT " + ct + "/FO " + fo + "/FT " + ft + "/V " + v + "/O " + o + "/S " + s + "\n");
+        outputFile.close();
+    }
+
+    public static double aRating = 0.2;
+    public static double beginingARating = 0.2;
+    public static int draftedBills = 0;
+    //Bill counts (number of bills that have made it to given levels)
+    public static int totalBillsCreated = 0;
+    public static int committeeOneBills = 0;
+    public static int committeeTwoBills = 0;
+    public static int floorOneBills = 0;
+    public static int floorTwoBills = 0;
+    public static int vetoedBills = 0;
+    public static int overriddenBills = 0;
+    public static int sLeader = -1;
+    public static int hLeader = -1;
      
     public static void main(String[] args) throws FileNotFoundException
     {
+        //Regular variables
         File inputNames = new File("LegNames.txt");
         File inputStates = new File("States.txt");
         Scanner inName = new Scanner(inputNames);
@@ -36,6 +67,8 @@ public class OoLDriver
 		final int LEGS = 535;
 		Random rand = new Random();
 
+        //Bipartisanship Variables
+        int mode = 0;
         double avgRating = 0.0;
         double maxRating = 0.0;
         double minRating = 0.0;
@@ -199,7 +232,10 @@ public class OoLDriver
                 Bill b = l.draftBill(senate);
                 if (b != null)
                 {
+                    //Update variables
+                    totalBillsCreated++;
                     b.creationDate = day;
+                    //Send to leader
                     int count = -1;
                     while(!(senate.get(++count) instanceof Leader));
                     ((Leader) senate.get(count)).newBill(b);
@@ -210,6 +246,9 @@ public class OoLDriver
                 Bill b = l.draftBill(house);
                 if (b != null)
                 {
+                    totalBillsCreated++;
+                    b.creationDate = day;
+                    //Send to leader
                     int count = -1;
                     while(!(house.get(++count) instanceof Leader));
                     ((Leader) house.get(count)).newBill(b);
@@ -223,7 +262,8 @@ public class OoLDriver
             int countH = -1;
             while(!(house.get(++countH) instanceof Leader));
             temp.addAll(((Leader) house.get(countH)).announceNewBills());
-            
+            sLeader = countS;
+            hLeader = countH;
             //Proccess List to send to all Committees
             for (Bill b : temp)
             {
@@ -235,12 +275,12 @@ public class OoLDriver
                     
                     if (b.isHalfway()) //Bill is in House
                     {
-                       // System.out.println("line 218");
+                        committeeTwoBills++;
                         for (Legislator l : house)
                         {
                             if (l.getCommittee() == b.getType())
                             {
-                                if (l.vote(b)) {
+                                if (l.vote(b, mode, presParty)) {
                                     yes++;
                                 }
                                 votes++;
@@ -256,7 +296,7 @@ public class OoLDriver
                         {
                             if (l.getCommittee() == b.getType())
                             {
-                                if (l.vote(b)) {
+                                if (l.vote(b, mode, presParty)) {
                                     yes++;
                                 }
                                 votes++;
@@ -270,11 +310,12 @@ public class OoLDriver
                     if (b.isHalfway()) //Bill in Senate
                     {
                         isHouse = false;
+                        committeeTwoBills++;
                         for (Legislator l : senate)
                         {
                             if (l.getCommittee() == b.getType())
                             {
-                                if (l.vote(b)) {
+                                if (l.vote(b, mode, presParty)) {
                                     yes++;
                                 }
                                 votes++;
@@ -288,7 +329,7 @@ public class OoLDriver
                         {
                             if (l.getCommittee() == b.getType())
                             {
-                                if (l.vote(b)) {
+                                if (l.vote(b, mode, presParty)) {
                                     yes++;
                                 }
                                 votes++;
@@ -304,6 +345,7 @@ public class OoLDriver
                 voteCount += votes;
                 if ( (votes / 2) < yes) //Passes
                 {
+                    committeeOneBills++;
                     b.setStatus(BillStatus.OnTheFloor);
                     if (isHouse)
                     {
@@ -326,12 +368,6 @@ public class OoLDriver
                 temp = new ArrayList<Bill>();
                 temp = ((Leader) senate.get(countS)).callForVote();
                 
-                    //printing floor vote header
-                // for(int row = 0; row < 50; row++) { 
-                //     System.out.print("*");
-                // }
-               // System.out.print("SENATE FLOOR VOTES\n");
-
                     //senate floor vote loop
                 for (int x =0; x <temp.size();x++)
                 {
@@ -339,7 +375,7 @@ public class OoLDriver
                     int yes = 0;
                     for (Legislator l : senate)
                     {
-                        if (l.vote(temp.get(x))) {
+                        if (l.vote(temp.get(x), mode, presParty)) {
                             yes++;
                         }
                         votes++;
@@ -348,6 +384,7 @@ public class OoLDriver
                     if ( (votes/2 < yes))
                     {
                         if (senate.indexOf(temp.get(x).getAuthor(0)) != -1) {
+                            floorOneBills++;
                             passedCount++;
                             ((Leader) house.get(countH)).passedCommittee(temp.get(x));
                         }
@@ -355,6 +392,7 @@ public class OoLDriver
                         {
                             temp.get(x).setStatus(BillStatus.Pending);
                             pres.getBill(temp.get(x));
+                            floorTwoBills++;
                             passedCount++;
                         }
                     }
@@ -369,12 +407,6 @@ public class OoLDriver
                 temp = new ArrayList<Bill>();
                 temp = ((Leader) house.get(countH)).callForVote();
 
-                    //printing floor vote header
-                // for(int row = 0; row < 50; row++) { 
-                //     System.out.print("*");
-                // }
-               // System.out.print("HOUSE FLOOR VOTES\n");
-
                     //house floor vote loop
                 for (int x =0; x <temp.size();x++)
                 {
@@ -382,7 +414,7 @@ public class OoLDriver
                     int yes = 0;
                     for (Legislator l : house)
                     {
-                        if (l.vote(temp.get(x))) {
+                        if (l.vote(temp.get(x), mode, presParty)) {
                             yes++;
                         }
                         votes++;
@@ -390,6 +422,7 @@ public class OoLDriver
                     if ( (votes/2 < yes))
                     {
                         if (house.indexOf(temp.get(x).getAuthor(0)) != -1) {
+                            floorOneBills++;
                             passedCount++;
                             ((Leader) senate.get(countS)).passedCommittee(temp.get(x));
                         }
@@ -397,6 +430,7 @@ public class OoLDriver
                         {
                             temp.get(x).setStatus(BillStatus.Pending);
                             pres.getBill(temp.get(x));
+                            floorTwoBills++;
                             passedCount++;
                         }
                     }
@@ -414,7 +448,8 @@ public class OoLDriver
                 for (Bill b : temp)
                 {
                     if (b.getStatus() == BillStatus.Rejected)
-                    {
+                    {   
+                        vetoedBills++;
                         if (house.indexOf(b.getAuthor(0)) != -1)
                             ((Leader) house.get(countH)).getRejected(b);
                         else
@@ -439,7 +474,7 @@ public class OoLDriver
                     boolean senateOverride = false;
                     for (Legislator l : senate)
                     {
-                        if (l.vote(b))
+                        if (l.vote(b, mode, presParty))
                             yes++;
                         votes++;
                     }
@@ -449,7 +484,7 @@ public class OoLDriver
                     boolean houseOverride = false;
                     for (Legislator l : house)
                     {
-                        if (l.vote(b))
+                        if (l.vote(b, mode, presParty))
                             yes++;
                         votes++;
                     }
@@ -460,7 +495,8 @@ public class OoLDriver
                         houseOverride = true;
                     
                     if (houseOverride && senateOverride)
-                    {
+                    {   
+                        overriddenBills++;
                         b.signDate = day;
                         lawBook.add(b);
                         passedCount++;
@@ -472,30 +508,35 @@ public class OoLDriver
                 }
         	    
                 double passRate = 0;
-                totalPassedBills += lawBook.size();
-                totalBills += (lawBook.size() + trash.size());
-                passRate = ((double)totalPassedBills / (double)totalBills);
+                passRate = ((double)passedCount / (double)voteCount);
                 
                 if((passRate > 0.1) || (passRate < 0.01))
                 {
-                    aRating -= 0.01;
+                    if(aRating > 0)
+                        aRating -= 0.01;
                     // Approval Rating -1%
                 }
                 else if (passRate >= 0.01 && passRate <= 0.1)
                 {
-                    aRating += 0.01;
+                    if(aRating < 1)
+                        aRating += 0.01;
                     // Approval Rating +1%
                 }
                 
                 if(passRate > 0.65)
                 {
+                    mode = 1;
                     // Pres's party 50% less likely to vote for different party bills
                     // Non-Pres's parties 50% more likely to vote for president's party's bills
                 }
                 else if(passRate < 0.45)
                 {
+                    mode = 2;
                     // Pres's party 50% more likely to vote for different party bills
                     // Non-Pres's parties 50% less likely to vote for president's party's bills
+                }
+                else {
+                    mode = 0;
                 }
                 
                 if(aRating > 0.65)
@@ -515,8 +556,17 @@ public class OoLDriver
             } //Outside of day loop
             
             avgRating = avgRating / YEAR;
-        
-            System.out.println("Average Approval Rating: " + (int)(avgRating*100) + "%");
+            
+            //Bill statistics
+            System.out.println("Total Bills Created: " + totalBillsCreated);
+            committeeTwoBills += ((Leader) house.get(hLeader)).pc.size() + ((Leader) senate.get(sLeader)).pc.size();
+            try {
+                PrintOutputFileInfo(lawBook.size());
+            } catch(IOException e) {
+                System.err.println("Print Error: " + e.getMessage());
+            }
+            //Aproval rating output
+            System.out.println("\nAverage Approval Rating: " + (int)(avgRating*100) + "%");
             System.out.println("Max Approval Rating: " + (int)(maxRating*100) + "%");
             System.out.println("Min Approval Rating: " + (int)(minRating*100) + "%");
             System.out.println("# of Days > 65%: " + highCount);

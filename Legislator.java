@@ -26,9 +26,11 @@ public class Legislator
      /**
      * Voting method for the Legislator Class.
      * @param b The input bill that the legislator is to vote on.
+     * @param mode 0 is default, 1 is below 65 percent, 2 is below 45 percent
+     * @param presParty The party of the president.
      * @return boolean Returns true if the legislator decides to vote yes, returns false if voting no.
      */
-     public boolean vote(Bill b)
+     public boolean vote(Bill b, int mode, PartyType presParty)
      {
           //Set important variables
           int index = b.getAuthorsArray().size();
@@ -45,9 +47,34 @@ public class Legislator
                }
           }
           
+          
           //Calculate sameParty odds
           samePartyOdds = recursion(sameParty, true); //To calculate same party odds, enter second parameter as true
           diffPartyOdds = recursion(diffParty, false);
+          
+          if(mode == 1)
+          {
+        	  if(presParty == getParty())
+        	  {
+            	  diffPartyOdds *= 0.5;
+        	  }
+        	  else
+        	  {
+            	  diffPartyOdds *= 1.5;
+        	  }
+        	  
+          }
+          else if(mode == 2)
+          {
+        	  if(presParty == getParty())
+        	  {
+            	  diffPartyOdds *= 1.5;
+        	  }
+        	  else
+        	  {
+            	  diffPartyOdds *= 0.5;
+        	  }
+          }
           
           //Decide what voting outcome is
           double factor = ((samePartyOdds * sameParty) + (diffPartyOdds * diffParty)) / ((double)(sameParty + diffParty)); //From OOL3 pdf.
